@@ -26,34 +26,35 @@ Owner (Lucio) needs the ability to easily add new projects, photos, and testimon
 
 - Lead with landmark / brownstone expertise, not generic remodeling
 - Trust signals: 30+ years experience, licensed & insured, Lucio + crew craftsmanship
-- Tagline direction: neighborhood + craft (e.g. “Landmark brownstone renovation across Brooklyn”) — not generic “dream homes”
-- Real copy sources today: Wix testimonials (home) + services page niche copy; replace placeholder photography with Lucio’s project photos as available
+- Print headline: “Your vision is our goal”; supporting line stays landmark / brownstone craft across Brooklyn
+- Real copy sources today: print brochures (About, contact, homeowner/DOB services) + Wix testimonials; replace placeholder photography with Lucio’s project photos as available
 
 ---
 
 ## Design Direction
 
-**Light limestone-forward** — architectural, Brooklyn, historic craft. Not dark/gold.
+**Official print brand** — black, gold, and paper. Logo sits on black (gold-on-black PNG; do not place on light fields).
 
-- **Palette:** cool limestone and plaster backgrounds, deep iron charcoal for type, muted brownstone brick as accent (not bright terracotta or gold)
-- **Typography:** expressive serif for brand + headlines; clean sans for body
-- **Feel:** professional, trustworthy, high-end local craftsman — more restoration studio than flashy contractor brochure
-- **Imagery:** full-bleed project / brownstone photography; stoops, façades, masonry, interiors
-- **Layout:** one job per section; photo-led; mobile-first
+- **Palette:** near-black (`#0a0a0a`) for chrome and dark bands, gold (`#c4a035`) for headings/CTAs/accents, bronze (`#8b6b3f`) for depth, warm paper (`#f7f4ec`) for long-form reading, white type on gold/black
+- **Typography:** Playfair Display for headlines; Montserrat for body and UI
+- **Logo:** `public/brand/logo.png` — gold skyline mark with INTOWN / CONSULTANTS wordmark; keep modest at large sizes until a vector exists
+- **Feel:** high-end residential construction; brochure language translated for web, not a 1:1 print paste
+- **Imagery:** full-bleed interiors and façades; honeycomb (`clip-path`) as a featured-work accent on desktop
+- **Layout:** color-blocked sections (black / gold / paper); sharp diagonal on the hero; mobile-first
 - **Motion:** restrained (2–3 intentional moments) — presence, not noise
 
 ### Hero rules
 
-- Brand is a hero-level signal
-- First viewport: brand, one headline, one short supporting line, one CTA group, one dominant full-bleed image
-- No cards, badges, stat strips, or overlay callouts on the hero
+- Brand is a hero-level signal (official logo in the black diagonal cut)
+- First viewport: logo, “Your vision is our goal,” one short supporting line, one CTA group, one dominant full-bleed image
+- Geometric diagonal is the one overlay; no cards, badges, or stat strips
 
 ---
 
 ## Core Pages
 
-1. **Home** — brand + niche + featured work + testimonials + CTA
-2. **Services** — landmark niche, brownstones, full renovation suite
+1. **Home** — brand + about + honeycomb work + homeowner service + testimonials + CTA
+2. **Services** — landmark niche, brownstones, DOB/regulatory, inspections, full renovation suite
 3. **Projects** — main portfolio, filterable (Sanity-driven)
 4. **About** — Lucio, experience, licensing
 5. **Contact / Get a Quote** — form (Resend) + contact details
@@ -102,4 +103,4 @@ sanity/
 
 - URL: https://ryanzillini.wixsite.com/my-site-1
 - Use only: home testimonials + services page text/niche framing
-- Do not carry over Wix layout or dark/gold styling
+- Visual system follows the official print brochures (black/gold), not the Wix layout

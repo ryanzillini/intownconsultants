@@ -7,9 +7,9 @@ export function HomeTestimonials() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="bg-plaster">
+    <section className="bg-paper">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
-        <h2 className="font-serif text-3xl tracking-tight text-iron sm:text-4xl">
+        <h2 className="font-serif text-3xl tracking-tight text-ink sm:text-4xl">
           What clients say
         </h2>
 
@@ -26,8 +26,8 @@ export function HomeTestimonials() {
                 ease: [0.22, 1, 0.36, 1],
               }}
             >
-              <blockquote className="border-t border-brownstone/40 pt-6">
-                <p className="text-sm leading-relaxed text-iron-muted sm:text-[15px]">
+              <blockquote className="border-t border-gold/60 pt-6">
+                <p className="text-sm leading-relaxed text-muted sm:text-[15px]">
                   &ldquo;{item.quote}&rdquo;
                 </p>
               </blockquote>

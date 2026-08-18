@@ -1,64 +1,93 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-const services = [
+const hexClip =
+  "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
+
+const work = [
   {
-    title: "Landmark Renovation",
-    body: "Navigating regulations and craft with equal care — our specialty for over three decades.",
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-    alt: "Restored historic home interior",
+    title: "Kitchens",
+    image: "/images/work/white-kitchen.png",
+    alt: "Bright galley kitchen with white cabinets and patterned tile",
   },
   {
     title: "Brownstones",
-    body: "Quality renovation that emphasizes the preservation of the architecture that makes a brownstone a brownstone.",
-    image:
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
-    alt: "Brownstone exterior with stoop",
+    image: "/images/work/brick-building.png",
+    alt: "Classic brick brownstone exterior",
   },
   {
-    title: "Full-Service Contracting",
-    body: "Interior remodeling, exterior masonry, HVAC, and waterproofing — one team for the whole job.",
-    image:
-      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80",
-    alt: "Architectural renovation detail",
+    title: "Baths",
+    image: "/images/work/white-tile-bathroom.png",
+    alt: "Bathroom with white subway tile and modern vanity",
+  },
+  {
+    title: "Outdoors",
+    image: "/images/work/backyard.png",
+    alt: "Backyard patio with illuminated steps and masonry",
+  },
+  {
+    title: "Interiors",
+    image: "/images/work/finished-basement.png",
+    alt: "Finished basement with exposed beams and leather seating",
   },
 ] as const;
 
 export function HomeServices() {
   return (
-    <section className="bg-limestone-light">
+    <section className="bg-paper">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="font-serif text-3xl tracking-tight text-iron sm:text-4xl">
-            What we do
+          <h2 className="font-serif text-3xl tracking-tight text-ink sm:text-4xl">
+            Final results
           </h2>
           <Link
             href="/services"
-            className="text-sm text-brownstone underline-offset-4 transition-colors hover:text-brownstone-deep hover:underline"
+            className="text-sm text-gold-deep underline-offset-4 transition-colors hover:text-gold hover:underline"
           >
             All services
           </Link>
         </div>
 
-        <ul className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
-          {services.map((service) => (
-            <li key={service.title} className="group">
-              <div className="relative aspect-[4/3] overflow-hidden">
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 md:hidden">
+          {work.map((item) => (
+            <li key={item.title} className="relative aspect-[4/3] overflow-hidden">
+              <Image
+                src={item.image}
+                alt={item.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </li>
+          ))}
+        </ul>
+
+        <ul className="mx-auto mt-14 hidden max-w-3xl grid-cols-6 md:grid">
+          {work.map((item, index) => (
+            <li
+              key={item.title}
+              className={cn(
+                "relative col-span-2 aspect-square",
+                index === 3 && "col-start-2",
+                index === 4 && "col-start-4",
+              )}
+              style={{
+                marginTop: index >= 3 ? "-18%" : undefined,
+              }}
+            >
+              <div
+                className="absolute inset-[6%] overflow-hidden bg-ink"
+                style={{ clipPath: hexClip }}
+              >
                 <Image
-                  src={service.image}
-                  alt={service.alt}
+                  src={item.image}
+                  alt={item.alt}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                  sizes="280px"
+                  className="object-cover"
                 />
               </div>
-              <h3 className="mt-5 font-serif text-xl text-iron">
-                {service.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-iron-muted">
-                {service.body}
-              </p>
             </li>
           ))}
         </ul>

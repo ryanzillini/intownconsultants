@@ -1,41 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  /* Limestone-forward palette — cool stone, not warm cream */
-  --limestone: #d8d4cb;
-  --limestone-light: #ebe8e1;
-  --plaster: #f4f2ed;
-  --iron: #1c1917;
-  --iron-muted: #4a453f;
-  --brownstone: #5e4638;
-  --brownstone-deep: #3d2e25;
-  --brass: #7d6f55;
+  --ink: #0a0a0a;
+  --gold: #c4a035;
+  --gold-deep: #8b6b3f;
+  --paper: #f7f4ec;
+  --white: #ffffff;
 
-  --background: var(--plaster);
-  --foreground: var(--iron);
-  --muted: var(--iron-muted);
-  --accent: var(--brownstone);
-  --surface: var(--limestone-light);
-  --border: color-mix(in srgb, var(--iron) 12%, transparent);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --muted: color-mix(in srgb, var(--ink) 58%, white);
+  --accent: var(--gold);
+  --surface: var(--white);
+  --border: color-mix(in srgb, var(--gold) 32%, transparent);
 }
 
 @theme inline {
+  --color-ink: var(--ink);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-paper: var(--paper);
+  --color-white: var(--white);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-limestone: var(--limestone);
-  --color-limestone-light: var(--limestone-light);
-  --color-plaster: var(--plaster);
-  --color-iron: var(--iron);
-  --color-iron-muted: var(--iron-muted);
-  --color-brownstone: var(--brownstone);
-  --color-brownstone-deep: var(--brownstone-deep);
-  --color-brass: var(--brass);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-surface: var(--surface);
   --color-border: var(--border);
-  --font-sans: var(--font-source-sans);
-  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-montserrat);
+  --font-serif: var(--font-playfair);
 }
 
 html {
@@ -49,6 +42,6 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--brownstone) 28%, transparent);
-  color: var(--iron);
+  background: color-mix(in srgb, var(--gold) 45%, transparent);
+  color: var(--ink);
 }

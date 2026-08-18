@@ -1,12 +1,15 @@
 export const siteConfig = {
   name: "Intown Consultants Inc.",
   shortName: "Intown Consultants",
-  tagline: "Landmark brownstone renovation across Brooklyn",
+  tagline: "Your vision is our goal",
   description:
-    "Brooklyn general contractor specializing in landmark and brownstone renovation — Downtown Brooklyn, Williamsburg, Carroll Gardens, and beyond.",
-  phone: "(718) 000-0000",
-  email: "info@intowninc.com",
-  address: "6921 8th Avenue, Brooklyn, NY",
+    "NYC-based, fully licensed and insured construction company specializing in residential renovations, historic brownstones, and landmark properties.",
+  phone: "718-836-3400",
+  phoneLabel: "Office",
+  phoneCell: "347-885-6700",
+  phoneCellLabel: "Lucio cell",
+  email: "Intownconsultants@gmail.com",
+  address: "6921 8th Avenue, Brooklyn, NY 10468",
   domain: "intowninc.com",
   nav: [
     { href: "/", label: "Home" },
@@ -17,9 +20,19 @@ export const siteConfig = {
   ],
 } as const;
 
+export const aboutCopy = {
+  heading: "About Us",
+  body: "Based in NYC, we are a fully licensed and insured construction company specializing in residential renovations. Our company is built on the expertise of our skilled workers, who bring more than 30 years of hands-on experience to every single job. We handle everything from full-gut remodels to kitchen and bathroom updates. We also specialize in historic brownstones and landmark properties, as well as professional masonry and stucco work. We are dedicated to delivering reliable, high-quality craftsmanship that brings your vision to life.",
+} as const;
+
+export const homeownerService = {
+  heading: "Homeowner Service",
+  body: "We offer expert homeowner pre-buying inspections and advice — including specialized chimney and sewer inspections — to identify structural flaws before you commit. Whether you are buying, investing, or planning a renovation, we help you see the building clearly.",
+} as const;
+
 export const servicesPage = {
   intro:
-    "Landmark renovation is our specialty. Exterior masonry and interior remodeling round out a full-service practice across Brooklyn.",
+    "Landmark renovation is our specialty. Exterior masonry, interiors, and homeowner inspections round out a full-service practice across Brooklyn.",
   niche: {
     heading: "Our Niche",
     items: [
@@ -33,6 +46,16 @@ export const servicesPage = {
       },
     ],
   },
+  capabilities: [
+    {
+      title: "Regulatory & DOB",
+      body: "In-house architectural and engineering expertise for complex approvals, DOB violations, and landmark buildings — so your project stays compliant from start to finish.",
+    },
+    {
+      title: "Homeowner Inspections",
+      body: "Pre-buying inspections and advice for homeowners and investors, including chimney and sewer inspections that surface structural flaws before they become surprises.",
+    },
+  ],
   offerings: [
     {
       id: "outdoor",
@@ -69,3 +92,7 @@ export const testimonials = [
       "We are very pleased with the work that we had done by Intown Consultants! Lucio and his crew are very professional, conscientious and courteous. With an eye to detail, they transformed our space and gave our home a new beginning. I would recommend them.",
   },
 ] as const;
+
+export function telHref(phone: string) {
+  return `tel:${phone.replace(/\D/g, "")}`;
+}
