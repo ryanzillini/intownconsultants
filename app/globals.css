@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Limestone-forward palette — cool stone, not warm cream */
+  --limestone: #d8d4cb;
+  --limestone-light: #ebe8e1;
+  --plaster: #f4f2ed;
+  --iron: #1c1917;
+  --iron-muted: #4a453f;
+  --brownstone: #5e4638;
+  --brownstone-deep: #3d2e25;
+  --brass: #7d6f55;
+
+  --background: var(--plaster);
+  --foreground: var(--iron);
+  --muted: var(--iron-muted);
+  --accent: var(--brownstone);
+  --surface: var(--limestone-light);
+  --border: color-mix(in srgb, var(--iron) 12%, transparent);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-limestone: var(--limestone);
+  --color-limestone-light: var(--limestone-light);
+  --color-plaster: var(--plaster);
+  --color-iron: var(--iron);
+  --color-iron-muted: var(--iron-muted);
+  --color-brownstone: var(--brownstone);
+  --color-brownstone-deep: var(--brownstone-deep);
+  --color-brass: var(--brass);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --font-sans: var(--font-source-sans);
+  --font-serif: var(--font-fraunces);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brownstone) 28%, transparent);
+  color: var(--iron);
 }
