@@ -17,6 +17,44 @@ export const siteConfig = {
   ],
 } as const;
 
+export const servicesPage = {
+  intro:
+    "Landmark renovation is our specialty. Exterior masonry and interior remodeling round out a full-service practice across Brooklyn.",
+  niche: {
+    heading: "Our Niche",
+    items: [
+      {
+        title: "Landmark Renovation",
+        body: "Landmarks come with many challenges and regulations which differ from your typical renovation. Lucio's 30+ years of experience with landmark renovations provides our team with utmost confidence in tackling any job related to Landmark renovation.",
+      },
+      {
+        title: "Brownstones",
+        body: "The brownstone style home is notorious in Brooklyn and NYC. Our team specializes in brownstone renovation. We ensure a quality renovation while emphasizing the preservation of the historical architecture that makes a brownstone a brownstone.",
+      },
+    ],
+  },
+  offerings: [
+    {
+      id: "outdoor",
+      title: "Outdoor Remodeling",
+      body: "Our masonry work speaks for itself. Nothing makes the outside of your home as beautiful as good brick work.",
+      image: "/images/services/outdoor-masonry.jpg",
+      width: 1214,
+      height: 442,
+      alt: "Before and after of outdoor masonry — rebuilt stone steps, brick wall, and integrated lighting",
+    },
+    {
+      id: "interior",
+      title: "Interior Remodeling",
+      body: "From unfinished basements to finished living space, we remodel interiors to the same standard as the rest of the house — clean, durable, and built around how you live.",
+      image: "/images/services/interior-before-after.jpg",
+      width: 2400,
+      height: 938,
+      alt: "Before and after of a basement interior remodel — unfinished space finished into a livable suite",
+    },
+  ],
+} as const;
+
 export const testimonials = [
   {
     quote:
