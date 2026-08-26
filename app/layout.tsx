@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Montserrat, Playfair_Display } from "next/font/google";
-import { Footer } from "@/components/layout/footer";
-import { Header } from "@/components/layout/header";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -25,16 +24,14 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
       className={`${playfair.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

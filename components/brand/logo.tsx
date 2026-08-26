@@ -6,12 +6,18 @@ type LogoProps = {
   className?: string;
   imageClassName?: string;
   priority?: boolean;
+  href?: string;
 };
 
-export function Logo({ className, imageClassName, priority = false }: LogoProps) {
+export function Logo({
+  className,
+  imageClassName,
+  priority = false,
+  href = "/",
+}: LogoProps) {
   return (
     <Link
-      href="/"
+      href={href}
       className={cn("inline-flex items-center", className)}
       aria-label="Intown Consultants home"
     >
