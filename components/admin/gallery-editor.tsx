@@ -4,9 +4,9 @@ import { upload } from "@vercel/blob/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Gallery, Photo } from "@/lib/galleries";
+import { PairWizard } from "@/components/admin/pair-wizard";
+import type { Gallery, Photo, PhotoPair } from "@/lib/galleries";
 import { prepareImage, safeFilename } from "@/lib/prepare-image";
-import { cn } from "@/lib/utils";
 
 type Job = {
   id: string;
@@ -21,19 +21,20 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [pairs, setPairs] = useState<PhotoPair[]>([]);
   const [title, setTitle] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [description, setDescription] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/admin/galleries/${galleryId}`);
     const data = (await response.json()) as {
       gallery?: Gallery;
       photos?: Photo[];
+      pairs?: PhotoPair[];
       error?: string;
     };
     if (!response.ok || !data.gallery) {
@@ -41,6 +42,7 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
     }
     setGallery(data.gallery);
     setPhotos(data.photos ?? []);
+    setPairs(data.pairs ?? []);
     setTitle(data.gallery.title);
     setNeighborhood(data.gallery.neighborhood ?? "");
     setDescription(data.gallery.description ?? "");
@@ -71,12 +73,21 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
     setGallery(data.gallery);
   }
 
-  async function persistOrder(next: Photo[]) {
+  async function persistPhotoOrder(next: Photo[]) {
     setPhotos(next);
     await fetch(`/api/admin/galleries/${galleryId}/photos`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ photoIds: next.map((photo) => photo.id) }),
+    });
+  }
+
+  async function persistPairOrder(next: PhotoPair[]) {
+    setPairs(next);
+    await fetch(`/api/admin/galleries/${galleryId}/pairs`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pairIds: next.map((pair) => pair.id) }),
     });
   }
 
@@ -87,19 +98,17 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
     const next = [...photos];
     const [item] = next.splice(index, 1);
     next.splice(nextIndex, 0, item);
-    void persistOrder(next);
+    void persistPhotoOrder(next);
   }
 
-  function onDrop(targetId: string) {
-    if (!draggingId || draggingId === targetId) return;
-    const from = photos.findIndex((photo) => photo.id === draggingId);
-    const to = photos.findIndex((photo) => photo.id === targetId);
-    if (from < 0 || to < 0) return;
-    const next = [...photos];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    setDraggingId(null);
-    void persistOrder(next);
+  function movePair(id: string, direction: -1 | 1) {
+    const index = pairs.findIndex((pair) => pair.id === id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= pairs.length) return;
+    const next = [...pairs];
+    const [item] = next.splice(index, 1);
+    next.splice(nextIndex, 0, item);
+    void persistPairOrder(next);
   }
 
   async function setCover(photoId: string) {
@@ -120,9 +129,15 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
     const response = await fetch(`/api/admin/photos/${photoId}`, {
       method: "DELETE",
     });
-    if (response.ok) {
-      setPhotos((current) => current.filter((photo) => photo.id !== photoId));
-    }
+    if (response.ok) await load();
+  }
+
+  async function removePair(pairId: string) {
+    if (!confirm("Remove this before and after pair?")) return;
+    const response = await fetch(`/api/admin/pairs/${pairId}`, {
+      method: "DELETE",
+    });
+    if (response.ok) await load();
   }
 
   async function removeGallery() {
@@ -203,7 +218,9 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
                   ...job,
                   status: "error",
                   error:
-                    err instanceof Error ? err.message : "Upload failed",
+                    err instanceof Error
+                      ? err.message
+                      : "Could not read this photo — try JPEG or PNG",
                 }
               : job,
           ),
@@ -222,7 +239,7 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -273,9 +290,92 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
       </form>
 
       <section>
+        <h2 className="font-serif text-2xl text-gold">
+          Before & after ({pairs.length})
+        </h2>
+        <div className="mt-4">
+          <PairWizard galleryId={galleryId} onSaved={load} />
+        </div>
+        {pairs.length === 0 ? (
+          <p className="mt-6 text-sm text-white/60">No before and after pairs yet.</p>
+        ) : (
+          <ul className="mt-6 space-y-4">
+            {pairs.map((pair, index) => (
+              <li key={pair.id} className="border border-gold/20 bg-black p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-gold">
+                      Before
+                    </p>
+                    <div className="relative mt-2 aspect-[4/3]">
+                      <Image
+                        src={pair.before.url}
+                        alt={pair.before.alt || "Before"}
+                        fill
+                        sizes="50vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-gold">
+                      After
+                    </p>
+                    <div className="relative mt-2 aspect-[4/3]">
+                      <Image
+                        src={pair.after.url}
+                        alt={pair.after.alt || "After"}
+                        fill
+                        sizes="50vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-white"
+                    onClick={() => movePair(pair.id, -1)}
+                    disabled={index === 0}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-white"
+                    onClick={() => movePair(pair.id, 1)}
+                    disabled={index === pairs.length - 1}
+                  >
+                    Down
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-gold"
+                    onClick={() => void setCover(pair.after.id)}
+                  >
+                    {gallery.cover_photo_id === pair.after.id
+                      ? "Cover"
+                      : "Set cover"}
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-12 flex-1 border border-red-400/40 px-2 text-xs text-red-200"
+                    onClick={() => void removePair(pair.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-serif text-2xl text-gold">
-            Photos ({photos.length})
+            Gallery ({photos.length})
           </h2>
           <button
             type="button"
@@ -287,15 +387,15 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            accept="image/*"
             multiple
             className="hidden"
             onChange={(event) => void onFiles(event.target.files)}
           />
         </div>
         <p className="mt-2 text-sm text-white/55">
-          You can pick several photos at once from your camera roll. They are
-          resized before upload so the site stays fast.
+          Pick one or several photos from your camera roll. They are resized
+          before upload so the site stays fast.
         </p>
 
         {jobs.length > 0 ? (
@@ -314,21 +414,11 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
         ) : null}
 
         {photos.length === 0 ? (
-          <p className="mt-6 text-sm text-white/60">No photos in this gallery yet.</p>
+          <p className="mt-6 text-sm text-white/60">No gallery photos yet.</p>
         ) : (
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photos.map((photo, index) => (
-              <li
-                key={photo.id}
-                draggable
-                onDragStart={() => setDraggingId(photo.id)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => onDrop(photo.id)}
-                className={cn(
-                  "overflow-hidden border border-gold/20 bg-black",
-                  draggingId === photo.id && "opacity-60",
-                )}
-              >
+              <li key={photo.id} className="overflow-hidden border border-gold/20 bg-black">
                 <div className="relative aspect-square">
                   <Image
                     src={photo.url}
@@ -341,7 +431,7 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
                 <div className="flex flex-wrap gap-2 p-2">
                   <button
                     type="button"
-                    className="min-h-11 flex-1 border border-gold/30 px-2 text-xs text-white"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-white"
                     onClick={() => movePhoto(photo.id, -1)}
                     disabled={index === 0}
                   >
@@ -349,7 +439,7 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
                   </button>
                   <button
                     type="button"
-                    className="min-h-11 flex-1 border border-gold/30 px-2 text-xs text-white"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-white"
                     onClick={() => movePhoto(photo.id, 1)}
                     disabled={index === photos.length - 1}
                   >
@@ -357,14 +447,14 @@ export function GalleryEditor({ galleryId }: { galleryId: string }) {
                   </button>
                   <button
                     type="button"
-                    className="min-h-11 flex-1 border border-gold/30 px-2 text-xs text-gold"
+                    className="min-h-12 flex-1 border border-gold/30 px-2 text-xs text-gold"
                     onClick={() => void setCover(photo.id)}
                   >
                     {gallery.cover_photo_id === photo.id ? "Cover" : "Set cover"}
                   </button>
                   <button
                     type="button"
-                    className="min-h-11 flex-1 border border-red-400/40 px-2 text-xs text-red-200"
+                    className="min-h-12 flex-1 border border-red-400/40 px-2 text-xs text-red-200"
                     onClick={() => void removePhoto(photo.id)}
                   >
                     Delete

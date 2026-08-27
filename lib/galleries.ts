@@ -27,9 +27,27 @@ export type Photo = {
 
 export type GalleryCard = Gallery & {
   photo_count: number;
+  pair_count: number;
   cover_url: string | null;
   cover_width: number | null;
   cover_height: number | null;
+};
+
+export type PhotoPair = {
+  id: string;
+  gallery_id: string;
+  sort_order: number;
+  created_at: string;
+  before: Photo;
+  after: Photo;
+};
+
+type PhotoInput = {
+  url: string;
+  pathname: string;
+  width: number;
+  height: number;
+  alt?: string;
 };
 
 export async function listGalleries(): Promise<GalleryCard[]> {
@@ -45,7 +63,16 @@ export async function listGalleries(): Promise<GalleryCard[]> {
       g.sort_order,
       g.created_at,
       g.updated_at,
-      (SELECT count(*)::int FROM photos ph WHERE ph.gallery_id = g.id) AS photo_count,
+      (
+        SELECT count(*)::int FROM photos ph
+        WHERE ph.gallery_id = g.id
+          AND NOT EXISTS (
+            SELECT 1 FROM photo_pairs pp
+            WHERE pp.gallery_id = g.id
+              AND (pp.before_photo_id = ph.id OR pp.after_photo_id = ph.id)
+          )
+      ) AS photo_count,
+      (SELECT count(*)::int FROM photo_pairs pp WHERE pp.gallery_id = g.id) AS pair_count,
       c.url AS cover_url,
       c.width AS cover_width,
       c.height AS cover_height
@@ -54,7 +81,21 @@ export async function listGalleries(): Promise<GalleryCard[]> {
       SELECT p.url, p.width, p.height
       FROM photos p
       WHERE p.gallery_id = g.id
-      ORDER BY CASE WHEN p.id = g.cover_photo_id THEN 0 ELSE 1 END, p.sort_order ASC
+      ORDER BY
+        CASE WHEN g.cover_photo_id IS NOT NULL AND p.id = g.cover_photo_id THEN 0 ELSE 1 END,
+        CASE WHEN p.id = (
+          SELECT pp.after_photo_id FROM photo_pairs pp
+          WHERE pp.gallery_id = g.id
+          ORDER BY pp.sort_order ASC, pp.created_at ASC
+          LIMIT 1
+        ) THEN 0 ELSE 1 END,
+        CASE WHEN NOT EXISTS (
+          SELECT 1 FROM photo_pairs pp
+          WHERE pp.gallery_id = g.id
+            AND (pp.before_photo_id = p.id OR pp.after_photo_id = p.id)
+        ) THEN 0 ELSE 1 END,
+        p.sort_order ASC,
+        p.created_at ASC
       LIMIT 1
     ) c ON true
     ORDER BY g.sort_order ASC, g.created_at DESC
@@ -86,6 +127,223 @@ export async function listPhotos(galleryId: string): Promise<Photo[]> {
     ORDER BY sort_order ASC, created_at ASC
   `;
   return rows as Photo[];
+}
+
+export async function listGalleryPhotos(galleryId: string): Promise<Photo[]> {
+  const sql = await getSql();
+  const rows = await sql`
+    SELECT p.* FROM photos p
+    WHERE p.gallery_id = ${galleryId}
+      AND NOT EXISTS (
+        SELECT 1 FROM photo_pairs pp
+        WHERE pp.gallery_id = ${galleryId}
+          AND (pp.before_photo_id = p.id OR pp.after_photo_id = p.id)
+      )
+    ORDER BY p.sort_order ASC, p.created_at ASC
+  `;
+  return rows as Photo[];
+}
+
+function rowToPair(row: Record<string, unknown>): PhotoPair {
+  return {
+    id: String(row.id),
+    gallery_id: String(row.gallery_id),
+    sort_order: Number(row.sort_order),
+    created_at: String(row.created_at),
+    before: {
+      id: String(row.before_id),
+      gallery_id: String(row.gallery_id),
+      url: String(row.before_url),
+      pathname: String(row.before_pathname),
+      width: Number(row.before_width),
+      height: Number(row.before_height),
+      alt: String(row.before_alt ?? ""),
+      sort_order: Number(row.before_sort_order),
+      created_at: String(row.before_created_at),
+    },
+    after: {
+      id: String(row.after_id),
+      gallery_id: String(row.gallery_id),
+      url: String(row.after_url),
+      pathname: String(row.after_pathname),
+      width: Number(row.after_width),
+      height: Number(row.after_height),
+      alt: String(row.after_alt ?? ""),
+      sort_order: Number(row.after_sort_order),
+      created_at: String(row.after_created_at),
+    },
+  };
+}
+
+export async function listPairs(galleryId: string): Promise<PhotoPair[]> {
+  const sql = await getSql();
+  const rows = await sql`
+    SELECT
+      pp.id,
+      pp.gallery_id,
+      pp.sort_order,
+      pp.created_at,
+      b.id AS before_id,
+      b.url AS before_url,
+      b.pathname AS before_pathname,
+      b.width AS before_width,
+      b.height AS before_height,
+      b.alt AS before_alt,
+      b.sort_order AS before_sort_order,
+      b.created_at AS before_created_at,
+      a.id AS after_id,
+      a.url AS after_url,
+      a.pathname AS after_pathname,
+      a.width AS after_width,
+      a.height AS after_height,
+      a.alt AS after_alt,
+      a.sort_order AS after_sort_order,
+      a.created_at AS after_created_at
+    FROM photo_pairs pp
+    JOIN photos b ON b.id = pp.before_photo_id
+    JOIN photos a ON a.id = pp.after_photo_id
+    WHERE pp.gallery_id = ${galleryId}
+    ORDER BY pp.sort_order ASC, pp.created_at ASC
+  `;
+  return (rows as Record<string, unknown>[]).map(rowToPair);
+}
+
+export async function getPairById(id: string) {
+  const sql = await getSql();
+  const rows = await sql`
+    SELECT
+      pp.id,
+      pp.gallery_id,
+      pp.sort_order,
+      pp.created_at,
+      b.id AS before_id,
+      b.url AS before_url,
+      b.pathname AS before_pathname,
+      b.width AS before_width,
+      b.height AS before_height,
+      b.alt AS before_alt,
+      b.sort_order AS before_sort_order,
+      b.created_at AS before_created_at,
+      a.id AS after_id,
+      a.url AS after_url,
+      a.pathname AS after_pathname,
+      a.width AS after_width,
+      a.height AS after_height,
+      a.alt AS after_alt,
+      a.sort_order AS after_sort_order,
+      a.created_at AS after_created_at
+    FROM photo_pairs pp
+    JOIN photos b ON b.id = pp.before_photo_id
+    JOIN photos a ON a.id = pp.after_photo_id
+    WHERE pp.id = ${id}
+    LIMIT 1
+  `;
+  const row = rows[0] as Record<string, unknown> | undefined;
+  return row ? rowToPair(row) : null;
+}
+
+async function insertPhoto(galleryId: string, input: PhotoInput) {
+  const sql = await getSql();
+  const rows = await sql`
+    INSERT INTO photos (gallery_id, url, pathname, width, height, alt, sort_order)
+    VALUES (
+      ${galleryId},
+      ${input.url},
+      ${input.pathname},
+      ${input.width},
+      ${input.height},
+      ${input.alt ?? ""},
+      (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM photos WHERE gallery_id = ${galleryId})
+    )
+    RETURNING *
+  `;
+  return rows[0] as Photo;
+}
+
+export async function createPair(
+  galleryId: string,
+  input: { before: PhotoInput; after: PhotoInput },
+) {
+  const before = await insertPhoto(galleryId, {
+    ...input.before,
+    alt: input.before.alt || "Before",
+  });
+  const after = await insertPhoto(galleryId, {
+    ...input.after,
+    alt: input.after.alt || "After",
+  });
+  const sql = await getSql();
+  const rows = await sql`
+    INSERT INTO photo_pairs (gallery_id, before_photo_id, after_photo_id, sort_order)
+    VALUES (
+      ${galleryId},
+      ${before.id},
+      ${after.id},
+      (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM photo_pairs WHERE gallery_id = ${galleryId})
+    )
+    RETURNING id
+  `;
+  await sql`
+    UPDATE galleries
+    SET
+      cover_photo_id = COALESCE(cover_photo_id, ${after.id}),
+      updated_at = now()
+    WHERE id = ${galleryId}
+  `;
+  const pair = await getPairById(String((rows[0] as { id: string }).id));
+  if (!pair) throw new Error("Could not load pair");
+  return pair;
+}
+
+export async function reorderPairs(galleryId: string, pairIds: string[]) {
+  const sql = await getSql();
+  for (const [index, pairId] of pairIds.entries()) {
+    await sql`
+      UPDATE photo_pairs
+      SET sort_order = ${index}
+      WHERE id = ${pairId} AND gallery_id = ${galleryId}
+    `;
+  }
+  await sql`UPDATE galleries SET updated_at = now() WHERE id = ${galleryId}`;
+}
+
+export async function deletePair(id: string) {
+  const pair = await getPairById(id);
+  if (!pair) return null;
+  const sql = await getSql();
+  await sql`DELETE FROM photo_pairs WHERE id = ${id}`;
+  await sql`DELETE FROM photos WHERE id = ${pair.before.id}`;
+  await sql`DELETE FROM photos WHERE id = ${pair.after.id}`;
+  await sql`
+    UPDATE galleries
+    SET
+      cover_photo_id = CASE
+        WHEN cover_photo_id IN (${pair.before.id}, ${pair.after.id}) THEN (
+          SELECT COALESCE(
+            (
+              SELECT pp.after_photo_id FROM photo_pairs pp
+              WHERE pp.gallery_id = ${pair.gallery_id}
+              ORDER BY pp.sort_order ASC, pp.created_at ASC
+              LIMIT 1
+            ),
+            (
+              SELECT p.id FROM photos p
+              WHERE p.gallery_id = ${pair.gallery_id}
+              ORDER BY p.sort_order ASC, p.created_at ASC
+              LIMIT 1
+            )
+          )
+        )
+        ELSE cover_photo_id
+      END,
+      updated_at = now()
+    WHERE id = ${pair.gallery_id}
+  `;
+  return {
+    id: pair.id,
+    gallery_id: pair.gallery_id,
+    pathnames: [pair.before.pathname, pair.after.pathname].filter(Boolean),
+  };
 }
 
 async function uniqueSlug(base: string, excludeId?: string) {
@@ -183,21 +441,8 @@ export async function addPhoto(input: {
   height: number;
   alt?: string;
 }) {
+  const photo = await insertPhoto(input.galleryId, input);
   const sql = await getSql();
-  const rows = await sql`
-    INSERT INTO photos (gallery_id, url, pathname, width, height, alt, sort_order)
-    VALUES (
-      ${input.galleryId},
-      ${input.url},
-      ${input.pathname},
-      ${input.width},
-      ${input.height},
-      ${input.alt ?? ""},
-      (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM photos WHERE gallery_id = ${input.galleryId})
-    )
-    RETURNING *
-  `;
-  const photo = rows[0] as Photo;
   await sql`
     UPDATE galleries
     SET
@@ -222,6 +467,16 @@ export async function reorderPhotos(galleryId: string, photoIds: string[]) {
 
 export async function deletePhoto(id: string) {
   const sql = await getSql();
+  const paired = await sql`
+    SELECT id FROM photo_pairs
+    WHERE before_photo_id = ${id} OR after_photo_id = ${id}
+    LIMIT 1
+  `;
+  if (paired.length > 0) {
+    const removed = await deletePair(String((paired[0] as { id: string }).id));
+    if (!removed) return null;
+    return { id, gallery_id: removed.gallery_id, pathnames: removed.pathnames };
+  }
   const rows = await sql`
     DELETE FROM photos WHERE id = ${id} RETURNING id, gallery_id, pathname
   `;
@@ -234,15 +489,29 @@ export async function deletePhoto(id: string) {
     SET
       cover_photo_id = CASE
         WHEN cover_photo_id = ${id} THEN (
-          SELECT p.id FROM photos p
-          WHERE p.gallery_id = ${deleted.gallery_id}
-          ORDER BY p.sort_order ASC
-          LIMIT 1
+          SELECT COALESCE(
+            (
+              SELECT pp.after_photo_id FROM photo_pairs pp
+              WHERE pp.gallery_id = ${deleted.gallery_id}
+              ORDER BY pp.sort_order ASC, pp.created_at ASC
+              LIMIT 1
+            ),
+            (
+              SELECT p.id FROM photos p
+              WHERE p.gallery_id = ${deleted.gallery_id}
+              ORDER BY p.sort_order ASC, p.created_at ASC
+              LIMIT 1
+            )
+          )
         )
         ELSE cover_photo_id
       END,
       updated_at = now()
     WHERE id = ${deleted.gallery_id}
   `;
-  return deleted;
+  return {
+    id: deleted.id,
+    gallery_id: deleted.gallery_id,
+    pathnames: [deleted.pathname],
+  };
 }

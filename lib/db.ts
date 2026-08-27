@@ -30,6 +30,16 @@ const STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS photos_gallery_sort_idx
     ON photos (gallery_id, sort_order)`,
+  `CREATE TABLE IF NOT EXISTS photo_pairs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    gallery_id UUID NOT NULL REFERENCES galleries(id) ON DELETE CASCADE,
+    before_photo_id UUID NOT NULL UNIQUE REFERENCES photos(id) ON DELETE RESTRICT,
+    after_photo_id UUID NOT NULL UNIQUE REFERENCES photos(id) ON DELETE RESTRICT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS photo_pairs_gallery_sort_idx
+    ON photo_pairs (gallery_id, sort_order)`,
 ];
 
 export function hasDatabase() {

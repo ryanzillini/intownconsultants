@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ProjectLightbox } from "@/components/projects/lightbox";
+import { ProjectMedia } from "@/components/projects/project-media";
 import { hasDatabase } from "@/lib/db";
-import { getGalleryBySlug, listPhotos } from "@/lib/galleries";
+import {
+  getGalleryBySlug,
+  listGalleryPhotos,
+  listPairs,
+} from "@/lib/galleries";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +34,11 @@ export default async function ProjectGalleryPage({
   if (!hasDatabase()) notFound();
   const gallery = await getGalleryBySlug(slug);
   if (!gallery) notFound();
-  const photos = await listPhotos(gallery.id);
+  const [pairs, photos] = await Promise.all([
+    listPairs(gallery.id),
+    listGalleryPhotos(gallery.id),
+  ]);
+  const empty = pairs.length === 0 && photos.length === 0;
 
   return (
     <>
@@ -54,10 +62,10 @@ export default async function ProjectGalleryPage({
       </section>
       <section className="bg-paper">
         <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 md:py-16">
-          {photos.length === 0 ? (
+          {empty ? (
             <p className="text-muted">Photos for this project are coming soon.</p>
           ) : (
-            <ProjectLightbox photos={photos} title={gallery.title} />
+            <ProjectMedia pairs={pairs} photos={photos} title={gallery.title} />
           )}
         </div>
       </section>

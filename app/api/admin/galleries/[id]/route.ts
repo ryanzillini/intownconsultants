@@ -4,6 +4,8 @@ import { hasDatabase } from "@/lib/db";
 import {
   deleteGallery,
   getGalleryById,
+  listGalleryPhotos,
+  listPairs,
   listPhotos,
   updateGallery,
 } from "@/lib/galleries";
@@ -22,8 +24,9 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!gallery) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const photos = await listPhotos(id);
-  return NextResponse.json({ gallery, photos });
+  const photos = await listGalleryPhotos(id);
+  const pairs = await listPairs(id);
+  return NextResponse.json({ gallery, photos, pairs });
 }
 
 export async function PATCH(request: Request, context: RouteContext) {

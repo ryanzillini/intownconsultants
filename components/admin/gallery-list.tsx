@@ -74,6 +74,9 @@ export function GalleryList() {
             <div className="px-4 py-4">
               <p className="font-serif text-xl text-gold">{gallery.title}</p>
               <p className="mt-1 text-sm text-white/60">
+                {Number(gallery.pair_count)}{" "}
+                {Number(gallery.pair_count) === 1 ? "pair" : "pairs"}
+                {" · "}
                 {Number(gallery.photo_count)}{" "}
                 {Number(gallery.photo_count) === 1 ? "photo" : "photos"}
                 {gallery.neighborhood ? ` · ${gallery.neighborhood}` : ""}

@@ -11,7 +11,7 @@ function loadImage(file: File) {
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Could not read this photo"));
+      reject(new Error("Could not read this photo — try JPEG or PNG"));
     };
     image.src = url;
   });

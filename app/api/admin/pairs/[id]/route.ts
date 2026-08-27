@@ -1,7 +1,7 @@
 import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { hasDatabase } from "@/lib/db";
-import { deletePhoto } from "@/lib/galleries";
+import { deletePair } from "@/lib/galleries";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -13,7 +13,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     );
   }
   const { id } = await context.params;
-  const deleted = await deletePhoto(id);
+  const deleted = await deletePair(id);
   if (!deleted) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
